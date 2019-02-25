@@ -14,10 +14,9 @@ import (
 	_ "github.com/lib/pq"
 )
 
-var addresses []Location
+var db *sql.DB
 
-// http://localhost:8080/?top=23.5&bottom=50.2&left=20&right=-20
-func main() {
+func init() {
 	err := godotenv.Load()
 	if err != nil {
 		panic(err)
@@ -32,54 +31,28 @@ func main() {
 	psqlInfo := fmt.Sprintf("host=%s port=%s user=%s "+"password=%s dbname=%s sslmode=disable",
 		host, port, user, password, dbname)
 
-	fmt.Println(psqlInfo)
-
-	db, err := sql.Open("postgres", psqlInfo)
-	if err != nil {
-		panic(err)
-	}
-	defer db.Close()
-
-	err = db.Ping()
+	database, err := sql.Open("postgres", psqlInfo)
 	if err != nil {
 		panic(err)
 	}
 
-	sqlStatement := `
-	SELECT * FROM addresses WHERE
-	latitude > ($1) AND latitude < ($2)`
-	rows, err := db.Query(sqlStatement, 20, 30)
-
+	err = database.Ping()
 	if err != nil {
 		panic(err)
 	}
-	defer rows.Close()
-	for rows.Next() {
-		var point Location
-		err = rows.Scan(&point.ID, &point.Latitude, &point.Longitude)
-		if err != nil {
-			panic(err)
-		}
-		addresses = append(addresses, point)
-	}
+	db = database
 
-	fmt.Println(addresses[0])
+}
+
+// http://localhost:8080/api?top=100&bottom=80.2&left=-20&right=200
+func main() {
 
 	router := mux.NewRouter()
-	router.HandleFunc("/", testHandler).Methods("GET")
+	router.HandleFunc("/api", apiHandler).Methods("GET")
 	log.Fatal(http.ListenAndServe(":8080", router))
-
 }
 
-func makeQuery(top, bottom, left, right string) {
-	// sqlStatement := `
-	// SELECT * FROM addresses WHERE
-	// latitude > ($1)`
-	// _, err = db.Exec(sqlStatement, 20)
-}
-
-func testHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Println(r.URL.Query())
+func apiHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	top := r.URL.Query().Get("top")
@@ -87,12 +60,39 @@ func testHandler(w http.ResponseWriter, r *http.Request) {
 	left := r.URL.Query().Get("left")
 	right := r.URL.Query().Get("right")
 	if len(top) > 0 && len(bottom) > 0 && len(left) > 0 && len(right) > 0 {
+		addresses := makeQuery(top, bottom, left, right)
 		json.NewEncoder(w).Encode(addresses)
 	}
 }
 
+func makeQuery(top, bottom, left, right string) []Location {
+	var addresses []Location
+
+	sqlStatement := `
+			SELECT * FROM addresses WHERE
+			longitude < ($1) AND longitude > ($2)
+			AND latitude > ($3) AND latitude < ($4)`
+	rows, err := db.Query(sqlStatement, top, bottom, left, right)
+
+	if err != nil {
+		panic(err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var point Location
+		err = rows.Scan(&point.ID, &point.Latitude, &point.Longitude, &point.Frequency)
+		if err != nil {
+			panic(err)
+		}
+		addresses = append(addresses, point)
+	}
+
+	return addresses
+}
+
 type Location struct {
 	ID        int64   `json:"id"`
-	Latitude  float64 `json:"latitude"`
-	Longitude float64 `json:"longitude"`
+	Latitude  float32 `json:"latitude"`
+	Longitude float32 `json:"longitude"`
+	Frequency int16   `json:"frequency"`
 }
