@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"text/template"
 
 	"github.com/joho/godotenv"
 
@@ -14,6 +15,7 @@ import (
 	_ "github.com/lib/pq"
 )
 
+var templates = template.Must(template.ParseFiles("assets/index.html"))
 var db *sql.DB
 
 func init() {
@@ -48,8 +50,18 @@ func init() {
 func main() {
 
 	router := mux.NewRouter()
+	router.HandleFunc("/", mapHandler)
 	router.HandleFunc("/api", apiHandler).Methods("GET")
+	router.PathPrefix("/").Handler(http.FileServer(http.Dir("./assets/")))
 	log.Fatal(http.ListenAndServe(":8080", router))
+}
+
+func mapHandler(w http.ResponseWriter, r *http.Request) {
+
+	err := templates.ExecuteTemplate(w, "index.html", nil)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 }
 
 func apiHandler(w http.ResponseWriter, r *http.Request) {
