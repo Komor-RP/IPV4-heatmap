@@ -25,8 +25,32 @@ function drawHeatMap() {
     let west = bounds.getWest();
     let east = bounds.getEast()
     console.log(`north: ${north}, south: ${south}, west: ${west}, east: ${east}`);
-    // cooldown on request
-    // restructure response data
+
+    getIPLocations(bounds.getNorth(), bounds.getSouth(), bounds.getWest(), bounds.getEast());
 }
 
 
+function getIPLocations(north, south, west, east) {
+    axios.get(
+        '/api',
+        {   
+            params: {
+                north: north,
+                south: south,
+                west: west,
+                east: east
+            },
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }
+    ).then(function (response) {
+    // handle success
+        console.log(response);
+    }).catch(function (error) {
+    // handle error
+        console.log(error);
+    }).then(function () {
+      // always executed
+    });
+}

@@ -46,7 +46,6 @@ func init() {
 
 }
 
-// http://localhost:8080/api?top=100&bottom=80.2&left=-20&right=200
 func main() {
 
 	router := mux.NewRouter()
@@ -67,24 +66,25 @@ func mapHandler(w http.ResponseWriter, r *http.Request) {
 func apiHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	top := r.URL.Query().Get("top")
-	bottom := r.URL.Query().Get("bottom")
-	left := r.URL.Query().Get("left")
-	right := r.URL.Query().Get("right")
-	if len(top) > 0 && len(bottom) > 0 && len(left) > 0 && len(right) > 0 {
-		addresses := makeQuery(top, bottom, left, right)
+	north := r.URL.Query().Get("north")
+	south := r.URL.Query().Get("south")
+	west := r.URL.Query().Get("west")
+	east := r.URL.Query().Get("east")
+	if len(north) > 0 && len(south) > 0 && len(west) > 0 && len(east) > 0 {
+		addresses := makeQuery(north, south, west, east)
 		json.NewEncoder(w).Encode(addresses)
 	}
 }
 
-func makeQuery(top, bottom, left, right string) []Location {
+func makeQuery(north, south, west, east string) []Location {
 	var addresses []Location
 
 	sqlStatement := `
 			SELECT * FROM addresses WHERE
-			longitude < ($1) AND longitude > ($2)
-			AND latitude > ($3) AND latitude < ($4)`
-	rows, err := db.Query(sqlStatement, top, bottom, left, right)
+			latitude < ($1) AND latitude > ($2)
+			AND longitude > ($3) AND longitude < ($4)
+			`
+	rows, err := db.Query(sqlStatement, north, south, west, east)
 
 	if err != nil {
 		panic(err)
