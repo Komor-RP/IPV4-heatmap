@@ -19,6 +19,7 @@ var templates = template.Must(template.ParseFiles("assets/index.html"))
 var db *sql.DB
 
 func init() {
+	fmt.Println(fmt.Println(os.Getenv("APP_ENV")))
 	if os.Getenv("APP_ENV") != "production" {
 		err := godotenv.Load()
 		if err != nil {
