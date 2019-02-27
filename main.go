@@ -95,12 +95,15 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 func makeQuery(north, south, west, east string) []Location {
 	var addresses []Location
 
+	maxFreq := getMaxFrequency(north, south, west, east)
+
 	sqlStatement := `
-			SELECT latitude, longitude, log(frequency) FROM addresses WHERE
+			SELECT latitude, longitude, log(frequency) / ($5)
+			 FROM addresses WHERE
 			latitude < ($1) AND latitude > ($2)
 			AND longitude > ($3) AND longitude < ($4)
 			`
-	rows, err := db.Query(sqlStatement, north, south, west, east)
+	rows, err := db.Query(sqlStatement, north, south, west, east, maxFreq)
 
 	if err != nil {
 		panic(err)
@@ -118,6 +121,28 @@ func makeQuery(north, south, west, east string) []Location {
 	}
 
 	return addresses
+}
+
+func getMaxFrequency(north, south, west, east string) int64 {
+	var max int64
+
+	sqlStatement := `SELECT MAX(frequency) from Addresses
+		WHERE
+		latitude < ($1) AND latitude > ($2)
+		AND longitude > ($3) AND longitude < ($4)`
+	answer, err := db.Query(sqlStatement, north, south, west, east)
+
+	if err != nil {
+		panic(err)
+	}
+
+	answer.Next()
+	err = answer.Scan(&max)
+	if err != nil {
+		panic(err)
+	}
+
+	return max
 }
 
 type Location struct {

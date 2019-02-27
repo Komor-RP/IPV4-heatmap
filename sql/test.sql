@@ -23,3 +23,16 @@ FROM './test.csv' CSV HEADER;
 INSERT INTO addresses (latitude, longitude)
 SELECT latitude, longitude FROM tmp
 WHERE latitude is NOT NULL AND longitude is NOT NULL;
+
+
+SELECT addr.latitude, addr.longitude, addr.frequency, log(addr.frequency)/log(2) FROM addresses addr
+
+INNER JOIN 
+    (
+        SELECT latitude, MAX(frequency) AS sda
+        FROM addresses
+        GROUP BY latitude
+    ) 
+
+WHERE latitude < 100 AND latitude > -100
+AND longitude > -100 AND longitude < 0

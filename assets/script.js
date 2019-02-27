@@ -1,4 +1,5 @@
 let myMap;
+let heat;
 init();
 
 function init() {
@@ -47,8 +48,10 @@ function plotHeat(data) {
             locations.push(Object.values(point));
         });
     }
-
-    var heat = L.heatLayer(locations, {radius: 15}).addTo(myMap);
+    if (heat) {
+        heat.remove();
+    }
+    heat = L.heatLayer(locations, {radius: 15}).addTo(myMap);
 }
 
 function getMapBounds() {
