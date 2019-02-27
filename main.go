@@ -71,8 +71,8 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 	west := r.URL.Query().Get("west")
 	east := r.URL.Query().Get("east")
 	if len(north) > 0 && len(south) > 0 && len(west) > 0 && len(east) > 0 {
-		addresses := makeQuery(north, south, west, east)
-		json.NewEncoder(w).Encode(addresses)
+		geojson := makeQuery(north, south, west, east)
+		json.NewEncoder(w).Encode(geojson)
 	}
 }
 
@@ -80,7 +80,7 @@ func makeQuery(north, south, west, east string) []Location {
 	var addresses []Location
 
 	sqlStatement := `
-			SELECT * FROM addresses WHERE
+			SELECT latitude, longitude, log(frequency) FROM addresses WHERE
 			latitude < ($1) AND latitude > ($2)
 			AND longitude > ($3) AND longitude < ($4)
 			`
@@ -92,10 +92,12 @@ func makeQuery(north, south, west, east string) []Location {
 	defer rows.Close()
 	for rows.Next() {
 		var point Location
-		err = rows.Scan(&point.ID, &point.Latitude, &point.Longitude, &point.Frequency)
+
+		err = rows.Scan(&point.Latitude, &point.Longitude, &point.Frequency)
 		if err != nil {
 			panic(err)
 		}
+
 		addresses = append(addresses, point)
 	}
 
@@ -103,8 +105,7 @@ func makeQuery(north, south, west, east string) []Location {
 }
 
 type Location struct {
-	ID        int64   `json:"id"`
 	Latitude  float32 `json:"latitude"`
 	Longitude float32 `json:"longitude"`
-	Frequency int16   `json:"frequency"`
+	Frequency float32 `json:"frequency"`
 }

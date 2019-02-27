@@ -1,56 +1,64 @@
-mapboxgl.accessToken = 'pk.eyJ1IjoiZmFuaCIsImEiOiJjanNrb3JyOWIxN3dhNDRscDRncGthdjE3In0.HuVODwv3RaTzjLptnEDGYQ';
-var map = new mapboxgl.Map({
-    container: 'map',
-    style: 'mapbox://styles/mapbox/streets-v11',
-    center: [-74.50, 40],
-    zoom: 7
-});
+let myMap;
+init();
 
-map.addControl(new mapboxgl.NavigationControl());
+function init() {
+    myMap = L.map('mapid').setView([35.99, -78.89], 12);
+    L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
+        maxZoom: 17,
+        id: 'mapbox.streets',
+        accessToken:    'pk.eyJ1IjoiZmFuaCIsImEiOiJjanNrb3JyOWIxN3dhNDRscDRncGthdjE3In0.HuVODwv3RaTzjLptnEDGYQ'
+    }).addTo(myMap);
 
+    myMap.on('zoom', getIPLocations);
+    myMap.on('moveend', getIPLocations);
 
-
-map.on("moveend", function() {
-    drawHeatMap()
-});
-
-
-
-
-function drawHeatMap() {
-    console.log("north: " + map.getBounds().getNorth());
-    let bounds = map.getBounds();
-    let north = bounds.getNorth();
-    let south = bounds.getSouth();
-    let west = bounds.getWest();
-    let east = bounds.getEast()
-    console.log(`north: ${north}, south: ${south}, west: ${west}, east: ${east}`);
-
-    getIPLocations(bounds.getNorth(), bounds.getSouth(), bounds.getWest(), bounds.getEast());
+    getIPLocations();
 }
 
+function getIPLocations() {
+    let coordinates = getMapBounds();
 
-function getIPLocations(north, south, west, east) {
     axios.get(
         '/api',
         {   
             params: {
-                north: north,
-                south: south,
-                west: west,
-                east: east
+                north: coordinates.north,
+                south: coordinates.south,
+                west: coordinates.west,
+                east: coordinates.east
             },
             headers: {
                 'Content-Type': 'application/json'
             }
         }
     ).then(function (response) {
-    // handle success
-        console.log(response);
+        plotHeat(response.data);
+
     }).catch(function (error) {
-    // handle error
         console.log(error);
-    }).then(function () {
-      // always executed
     });
 }
+
+function plotHeat(data) {
+    let locations = [];
+
+    if (data) {
+        data.forEach(function(point) {
+            locations.push(Object.values(point));
+        });
+    }
+
+    var heat = L.heatLayer(locations, {radius: 15}).addTo(myMap);
+}
+
+function getMapBounds() {
+    let bounds = myMap.getBounds();
+
+    return {
+        north: bounds.getNorth(),
+        south: bounds.getSouth(),
+        west: bounds.getWest(),
+        east: bounds.getEast()
+    }
+}
+
