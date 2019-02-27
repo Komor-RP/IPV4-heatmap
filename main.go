@@ -19,26 +19,35 @@ var templates = template.Must(template.ParseFiles("assets/index.html"))
 var db *sql.DB
 
 func init() {
-	fmt.Println(fmt.Println(os.Getenv("APP_ENV")))
+	var host, port, user, password, dbname string
+	var database *sql.DB
+	var err error
+
 	if os.Getenv("APP_ENV") != "production" {
 		err := godotenv.Load()
+
 		if err != nil {
 			panic(err)
 		}
-	}
 
-	host := os.Getenv("db_host")
-	port := os.Getenv("db_port")
-	user := os.Getenv("db_user")
-	password := os.Getenv("db_pass")
-	dbname := os.Getenv("db_name")
+		host = os.Getenv("db_host")
+		port = os.Getenv("db_port")
+		user = os.Getenv("db_user")
+		password = os.Getenv("db_pass")
+		dbname = os.Getenv("db_name")
 
-	psqlInfo := fmt.Sprintf("host=%s port=%s user=%s "+"password=%s dbname=%s sslmode=disable",
-		host, port, user, password, dbname)
+		psqlInfo := fmt.Sprintf("host=%s port=%s user=%s "+"password=%s dbname=%s sslmode=disable",
+			host, port, user, password, dbname)
 
-	database, err := sql.Open("postgres", psqlInfo)
-	if err != nil {
-		panic(err)
+		database, err = sql.Open("postgres", psqlInfo)
+		if err != nil {
+			panic(err)
+		}
+	} else {
+		database, err = sql.Open("postgres", os.Getenv("DATABASE_URL"))
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	err = database.Ping()

@@ -1,9 +1,9 @@
--- CREATE TABLE Addresses (
---     id SERIAL NOT NULL,
---     latitude FLOAT  NOT NULL,
---     longitude FLOAT  NOT NULL,
---     frequency INTEGER NOT NULL
--- );
+CREATE TABLE Addresses (
+    id SERIAL NOT NULL,
+    latitude FLOAT  NOT NULL,
+    longitude FLOAT  NOT NULL,
+    frequency INTEGER NOT NULL
+);
 
 -- Create temporary table for all the data
 CREATE TEMP TABLE tmp (
