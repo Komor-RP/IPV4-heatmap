@@ -98,8 +98,8 @@ func makeQuery(north, south, west, east string) []Location {
 	maxFreq := getMaxFrequency(north, south, west, east)
 
 	sqlStatement := `
-			SELECT latitude, longitude, log(frequency) / ($5)
-			 FROM addresses WHERE
+			SELECT latitude, longitude, log(frequency) / log($5)
+			FROM addresses WHERE
 			latitude < ($1) AND latitude > ($2)
 			AND longitude > ($3) AND longitude < ($4)
 			`

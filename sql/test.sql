@@ -36,3 +36,9 @@ INNER JOIN
 
 WHERE latitude < 100 AND latitude > -100
 AND longitude > -100 AND longitude < 0
+
+
+SELECT latitude, longitude, log(frequency) / log()
+FROM addresses WHERE
+latitude < ($1) AND latitude > ($2)
+AND longitude > ($3) AND longitude < ($4)

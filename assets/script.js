@@ -51,7 +51,17 @@ function plotHeat(data) {
     if (heat) {
         heat.remove();
     }
-    heat = L.heatLayer(locations, {radius: 15}).addTo(myMap);
+    heat = L.heatLayer(locations, {
+        radius: 15,
+        minOpacity: .2,
+
+        gradient: {
+            0.2: 'blue',
+            0.4: 'cyan',
+            0.6: 'lime',
+            0.8: 'yellow', 
+            1: 'red'}
+    }).addTo(myMap);
 }
 
 function getMapBounds() {
