@@ -59,12 +59,16 @@ func init() {
 }
 
 func main() {
+	port := os.Getenv("PORT")
+	if port == "" {
+		log.Fatal("$PORT must be set")
+	}
 
 	router := mux.NewRouter()
 	router.HandleFunc("/", mapHandler)
 	router.HandleFunc("/api", apiHandler).Methods("GET")
 	router.PathPrefix("/").Handler(http.FileServer(http.Dir("./assets/")))
-	log.Fatal(http.ListenAndServe(":8080", router))
+	log.Fatal(http.ListenAndServe(":"+port, router))
 }
 
 func mapHandler(w http.ResponseWriter, r *http.Request) {
