@@ -135,6 +135,7 @@ func getMaxFrequency(north, south, west, east string) int64 {
 	if err != nil {
 		panic(err)
 	}
+	defer answer.Close()
 
 	answer.Next()
 	err = answer.Scan(&max)
