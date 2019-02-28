@@ -18,6 +18,8 @@ import (
 var templates = template.Must(template.ParseFiles("assets/index.html"))
 var db *sql.DB
 
+// init executes before main
+// and establishes the database connnection
 func init() {
 	var host, port, user, password, dbname string
 	var database *sql.DB
@@ -58,6 +60,7 @@ func init() {
 
 }
 
+// main starts running the server and establishes routes and handlers
 func main() {
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -71,6 +74,7 @@ func main() {
 	log.Fatal(http.ListenAndServe(":"+port, router))
 }
 
+// mapHandler shows the index page with a map on it
 func mapHandler(w http.ResponseWriter, r *http.Request) {
 
 	err := templates.ExecuteTemplate(w, "index.html", nil)
@@ -79,6 +83,8 @@ func mapHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// apiHandler queries the database for lat, long points and
+// sends them as the response
 func apiHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -87,11 +93,13 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 	west := r.URL.Query().Get("west")
 	east := r.URL.Query().Get("east")
 	if len(north) > 0 && len(south) > 0 && len(west) > 0 && len(east) > 0 {
-		geojson := makeQuery(north, south, west, east)
-		json.NewEncoder(w).Encode(geojson)
+		addresses := makeQuery(north, south, west, east)
+		json.NewEncoder(w).Encode(addresses)
 	}
 }
 
+// makeQuery conducts the database query for coordinate points
+// within the boundary
 func makeQuery(north, south, west, east string) []Location {
 	var addresses []Location
 
@@ -109,6 +117,7 @@ func makeQuery(north, south, west, east string) []Location {
 		panic(err)
 	}
 	defer rows.Close()
+
 	for rows.Next() {
 		var point Location
 
@@ -123,6 +132,8 @@ func makeQuery(north, south, west, east string) []Location {
 	return addresses
 }
 
+// getMaxFrequency gets the max frequency of the coordinates
+// within a bounds
 func getMaxFrequency(north, south, west, east string) int64 {
 	var max int64
 
@@ -146,6 +157,7 @@ func getMaxFrequency(north, south, west, east string) int64 {
 	return max
 }
 
+// Location is a struct that represents a coordinate
 type Location struct {
 	Latitude  float32 `json:"latitude"`
 	Longitude float32 `json:"longitude"`

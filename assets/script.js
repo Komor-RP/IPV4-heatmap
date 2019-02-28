@@ -3,6 +3,7 @@ let heat;
 init();
 
 function init() {
+    // set down map
     myMap = L.map('mapid').setView([35.99, -78.89], 12);
     L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
         maxZoom: 17,
@@ -10,13 +11,17 @@ function init() {
         accessToken:    'pk.eyJ1IjoiZmFuaCIsImEiOiJjanNrb3JyOWIxN3dhNDRscDRncGthdjE3In0.HuVODwv3RaTzjLptnEDGYQ'
     }).addTo(myMap);
 
-    myMap.on('zoom', getIPLocations);
-    myMap.on('moveend', getIPLocations);
+    // add movement listeners
+    myMap.on('zoom', drawHeatMap);
+    myMap.on('moveend', drawHeatMap);
 
-    getIPLocations();
+    // initiate first load
+    drawHeatMap();
 }
 
-function getIPLocations() {
+// sends a get request for coordinate information
+// and plots the coordinates onto the map
+function drawHeatMap() {
     let coordinates = getMapBounds();
 
     axios.get(
@@ -43,14 +48,20 @@ function getIPLocations() {
 function plotHeat(data) {
     let locations = [];
 
+    // transforms data to expected Leaflet-heat form
+    // [latitude, longitude, intensity]
     if (data) {
         data.forEach(function(point) {
             locations.push(Object.values(point));
         });
     }
+
+    // removes old heat layer so they don't stack
     if (heat) {
         heat.remove();
     }
+
+    // plots heat layer using constructed data
     heat = L.heatLayer(locations, {
         radius: 15,
         minOpacity: .2,
@@ -64,6 +75,7 @@ function plotHeat(data) {
     }).addTo(myMap);
 }
 
+// gets the map boundaries and returns as an anonymous object
 function getMapBounds() {
     let bounds = myMap.getBounds();
 
