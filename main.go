@@ -110,6 +110,7 @@ func makeQuery(north, south, west, east string) []Location {
 			FROM addresses WHERE
 			latitude < ($1) AND latitude > ($2)
 			AND longitude > ($3) AND longitude < ($4)
+			LIMIT 20000
 			`
 	rows, err := db.Query(sqlStatement, north, south, west, east, maxFreq)
 
