@@ -1,6 +1,6 @@
 # IPV4-heatmap
 
-## Development Notes
+## Development Note
 Running sql file on the command line
 ```shell
 psql -U postgres -d postgres -a -f ./loadData.sql
